@@ -1,0 +1,8 @@
+.idea
+/ansible/gce.ini
+/ansible/pkey.p12
+/ansible/pkey.pem
+/terraform/google-compute-engine-account.json
+/terraform/terraform.tfstate
+/terraform/terraform.tfstate.backup
+/terraform/terraform.tfvars

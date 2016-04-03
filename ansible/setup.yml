@@ -1,0 +1,54 @@
+- hosts: tag_web
+  tasks:
+  - name: NGINX | Adding NGINX signing key
+    apt_key: url=http://nginx.org/keys/nginx_signing.key state=present
+
+  - name: NGINX | Adding sources.list deb url for NGINX
+    lineinfile: dest=/etc/apt/sources.list line="deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx"
+
+  - name: NGINX Plus | Adding sources.list deb-src url for NGINX
+    lineinfile: dest=/etc/apt/sources.list line="deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx"
+
+  - name: NGINX | Updating apt cache and install NGINX
+    apt:
+      name: nginx
+      state: latest
+      update_cache: yes
+
+  - name: NGINX | Overwrite /etc/nginx/conf.d/default.conf
+    template: src=templates/nginx-default.conf.j2 dest=/etc/nginx/conf.d/default.conf owner=root group=root mode=0644
+
+  - name: NGINX | Restart NGINX
+    service:
+      name: nginx
+      state: restarted
+
+
+- hosts: tag_app
+  tasks:
+  - name: Node.js app | Install Node.js
+    apt:
+      name: nodejs
+      state: latest
+      update_cache: yes
+
+  - name: Node.js app | Install npm
+    apt:
+      name: npm
+      state: latest
+
+  - name: Node.js app | Install PM2
+    npm:
+      name: pm2
+      state: present
+      global: yes
+
+  - name: Node.js app | Add Node.js application
+    template: src=templates/hello.js.j2 dest=~/hello.js owner=root group=root mode=0644
+
+  - name: Node.js app | PM2 requires Node.js to be available as node
+    shell: ln -s /usr/bin/nodejs /usr/bin/node
+    ignore_errors: yes
+
+  - name: Node.js app | Start application with PM2
+    shell: pm2 start ~/hello.js -f
